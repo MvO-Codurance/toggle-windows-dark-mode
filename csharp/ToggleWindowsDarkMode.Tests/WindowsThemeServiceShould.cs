@@ -41,6 +41,20 @@ public class WindowsThemeServiceShould
         sut.ApplicationsTheme = Theme.Light;
         sut.ApplicationsTheme.Should().Be(Theme.Light);
     }
+    
+    [Fact]
+    public void Toggle_Theme()
+    {
+        var sut = GetService();
+        
+        sut.ToggleLightDarkTheme();
+        sut.ApplicationsTheme.Should().Be(Theme.Dark);
+        sut.ApplicationsTheme.Should().Be(Theme.Dark);
+        
+        sut.ToggleLightDarkTheme();
+        sut.ApplicationsTheme.Should().Be(Theme.Light);
+        sut.ApplicationsTheme.Should().Be(Theme.Light);
+    }
 
     private static WindowsThemeService GetService()
     {

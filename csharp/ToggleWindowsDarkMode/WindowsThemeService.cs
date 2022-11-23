@@ -28,6 +28,31 @@ public class WindowsThemeService
         set => SetCurrentTheme(ApplicationsValueName, value);
     }
 
+    public UIntPtr BroadcastSettingSetChanged(string settingSetName)
+    {
+        var result = UIntPtr.Zero;
+        
+        NativeMethods.SendMessageTimeout(
+            NativeMethods.HWND_BROADCAST,
+            NativeMethods.WM_SETTINGCHANGE,
+            UIntPtr.Zero, 
+            settingSetName,
+            NativeMethods.SendMessageTimeoutFlags.SMTO_ABORTIFHUNG,
+            5000,
+            out result);
+
+        return result;
+    }
+    
+    public void ToggleLightDarkTheme()
+    {
+        var newTheme = SystemTheme == Theme.Light ? Theme.Dark : Theme.Light;
+        SystemTheme = newTheme;
+        ApplicationsTheme = newTheme;
+
+        BroadcastSettingSetChanged("ImmersiveColorSet");
+    }
+
     private Theme GetCurrentTheme(string themeValueName)
     {
         var subKey = OpenPersonalizeSubKey(false);
@@ -61,10 +86,5 @@ public class WindowsThemeService
         }
 
         return subKey;
-    }
-
-    public void ToggleLightDarkTheme()
-    {
-        throw new NotImplementedException();
     }
 }
