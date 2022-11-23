@@ -2,20 +2,22 @@ using Microsoft.Win32;
 
 namespace ToggleWindowsDarkMode;
 
-public static class DarkModeToggler
+public class WindowsThemeService
 {
     private const string PersonalizeSubKey = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize";
     private const string SystemValueName = "SystemUsesLightTheme";
     private const string ApplicationsValueName = "AppsUseLightTheme";
-    
-    public static Theme GetSystemTheme()
+
+    public Theme SystemTheme
     {
-        return ReadCurrentTheme(SystemValueName);
+        get => ReadCurrentTheme(SystemValueName);
+        set { }
     }
 
-    public static Theme GetApplicationsTheme()
+    public Theme ApplicationsTheme
     {
-        return ReadCurrentTheme(ApplicationsValueName);
+        get => ReadCurrentTheme(ApplicationsValueName);
+        set { }
     }
 
     private static Theme ReadCurrentTheme(string themeValueName)
