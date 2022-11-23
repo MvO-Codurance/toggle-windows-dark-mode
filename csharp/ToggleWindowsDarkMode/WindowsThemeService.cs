@@ -62,4 +62,9 @@ public class WindowsThemeService
 
         return subKey;
     }
+
+    public void ToggleLightDarkTheme()
+    {
+        throw new NotImplementedException();
+    }
 }
