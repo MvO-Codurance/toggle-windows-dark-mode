@@ -1,3 +1,4 @@
+using DotNetWindowsRegistry;
 using Microsoft.Win32;
 
 namespace ToggleWindowsDarkMode;
@@ -7,7 +8,14 @@ public class WindowsThemeService
     private const string PersonalizeSubKey = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize";
     private const string SystemValueName = "SystemUsesLightTheme";
     private const string ApplicationsValueName = "AppsUseLightTheme";
+    
+    private readonly IRegistry _registry;
 
+    public WindowsThemeService(IRegistry registry)
+    {
+        _registry = registry;
+    }
+    
     public Theme SystemTheme
     {
         get => ReadCurrentTheme(SystemValueName);
@@ -20,9 +28,15 @@ public class WindowsThemeService
         set { }
     }
 
-    private static Theme ReadCurrentTheme(string themeValueName)
+    private Theme ReadCurrentTheme(string themeValueName)
     {
-        var subKey = Registry.CurrentUser.OpenSubKey(PersonalizeSubKey);
+        IRegistryKey? currentUserKey = _registry.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Default);
+        if (currentUserKey == null)
+        {
+            throw new InvalidOperationException(@$"Registry key not found: HKCU");
+        }
+        
+        var subKey = currentUserKey.OpenSubKey(PersonalizeSubKey);
         if (subKey == null)
         {
             throw new InvalidOperationException(@$"Registry key not found: HKCU:\{PersonalizeSubKey}");
@@ -35,7 +49,7 @@ public class WindowsThemeService
                 @$"Registry value not found: HKCU:\{PersonalizeSubKey}\{themeValueName}");
         }
 
-        var usesLightTheme = Convert.ToBoolean(rawValue);
+        var usesLightTheme = Convert.ToBoolean(Convert.ToInt32(rawValue));
         
         return usesLightTheme ? Theme.Light : Theme.Dark;
     }

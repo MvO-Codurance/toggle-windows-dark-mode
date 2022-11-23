@@ -1,15 +1,15 @@
+using DotNetWindowsRegistry;
 using FluentAssertions;
+using Microsoft.Win32;
 
 namespace ToggleWindowsDarkMode.Tests;
 
 public class WindowsThemeServiceShould
 {
-    // NOTE: these unit tests assume the system is set to Light theme
-    
     [Fact]
     public void Get_The_Current_System_Theme()
     {
-        new WindowsThemeService().SystemTheme.Should().Be(Theme.Light);
+        GetService().SystemTheme.Should().Be(Theme.Light);
     }
     
     // [Fact]
@@ -27,7 +27,36 @@ public class WindowsThemeServiceShould
     [Fact]
     public void Get_The_Current_Applications_Theme()
     {
-        new WindowsThemeService().ApplicationsTheme.Should().Be(Theme.Light);
+        GetService().ApplicationsTheme.Should().Be(Theme.Light);
     }
-    
+
+
+    private static WindowsThemeService GetService()
+    {
+        var registry = new InMemoryRegistry();
+        
+        registry.AddStructure(RegistryView.Default, string.Join(Environment.NewLine,
+            @"HKEY_CURRENT_USER",
+            @"  SOFTWARE",
+            @"    Microsoft",
+            @"      Windows",
+            @"        CurrentVersion",
+            @"          Themes",
+            @"            Personalize",
+            @"              SystemUsesLightTheme = 1")
+        );
+        
+        registry.AddStructure(RegistryView.Default, string.Join(Environment.NewLine,
+            @"HKEY_CURRENT_USER",
+            @"  SOFTWARE",
+            @"    Microsoft",
+            @"      Windows",
+            @"        CurrentVersion",
+            @"          Themes",
+            @"            Personalize",
+            @"              AppsUseLightTheme = 1")
+        );
+        
+        return new WindowsThemeService(registry);
+    }
 }
