@@ -18,39 +18,48 @@ public class WindowsThemeService
     
     public Theme SystemTheme
     {
-        get => ReadCurrentTheme(SystemValueName);
-        set { }
+        get => GetCurrentTheme(SystemValueName);
+        set => SetCurrentTheme(SystemValueName, value);
     }
 
     public Theme ApplicationsTheme
     {
-        get => ReadCurrentTheme(ApplicationsValueName);
-        set { }
+        get => GetCurrentTheme(ApplicationsValueName);
+        set => SetCurrentTheme(ApplicationsValueName, value);
     }
 
-    private Theme ReadCurrentTheme(string themeValueName)
+    private Theme GetCurrentTheme(string themeValueName)
     {
-        IRegistryKey? currentUserKey = _registry.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Default);
+        var subKey = OpenPersonalizeSubKey(false);
+        var rawValue = subKey.GetValue(themeValueName);
+        if (rawValue == null)
+        {
+            throw new InvalidOperationException(@$"Registry value not found: HKCU:\{PersonalizeSubKey}\{themeValueName}");
+        }
+
+        return Enum.Parse<Theme>(rawValue.ToString()!);
+    }
+    
+    private void SetCurrentTheme(string themeValueName, Theme theme)
+    {
+        var subKey = OpenPersonalizeSubKey(true);
+        subKey.SetValue(themeValueName, Convert.ToInt32(theme));
+    }
+
+    private IRegistryKey OpenPersonalizeSubKey(bool writable)
+    {
+        var currentUserKey = _registry.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Default);
         if (currentUserKey == null)
         {
             throw new InvalidOperationException(@$"Registry key not found: HKCU");
         }
-        
-        var subKey = currentUserKey.OpenSubKey(PersonalizeSubKey);
+
+        var subKey = currentUserKey.OpenSubKey(PersonalizeSubKey, writable);
         if (subKey == null)
         {
             throw new InvalidOperationException(@$"Registry key not found: HKCU:\{PersonalizeSubKey}");
         }
 
-        var rawValue = subKey.GetValue(themeValueName);
-        if (rawValue == null)
-        {
-            throw new InvalidOperationException(
-                @$"Registry value not found: HKCU:\{PersonalizeSubKey}\{themeValueName}");
-        }
-
-        var usesLightTheme = Convert.ToBoolean(Convert.ToInt32(rawValue));
-        
-        return usesLightTheme ? Theme.Light : Theme.Dark;
+        return subKey;
     }
 }

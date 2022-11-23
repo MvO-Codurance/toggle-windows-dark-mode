@@ -2,6 +2,6 @@ namespace ToggleWindowsDarkMode;
 
 public enum Theme
 {
-    Light,
-    Dark
+    Dark = 0,
+    Light = 1
 }
