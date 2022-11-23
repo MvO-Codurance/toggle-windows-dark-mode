@@ -1,5 +1,7 @@
+using System.Runtime.InteropServices;
 using DotNetWindowsRegistry;
 using Microsoft.Win32;
+using PInvoke;
 
 namespace ToggleWindowsDarkMode;
 
@@ -28,18 +30,21 @@ public class WindowsThemeService
         set => SetCurrentTheme(ApplicationsValueName, value);
     }
 
-    public UIntPtr BroadcastSettingSetChanged(string settingSetName)
+    public IntPtr BroadcastSettingSetChanged(string settingSetName)
     {
-        var result = UIntPtr.Zero;
-        
-        NativeMethods.SendMessageTimeout(
-            NativeMethods.HWND_BROADCAST,
-            NativeMethods.WM_SETTINGCHANGE,
-            UIntPtr.Zero, 
-            settingSetName,
-            NativeMethods.SendMessageTimeoutFlags.SMTO_ABORTIFHUNG,
+        var result = IntPtr.Zero;
+        var lParam = Marshal.StringToHGlobalUni(settingSetName);
+
+        User32.SendMessageTimeout(
+            User32.HWND_BROADCAST,
+            User32.WindowMessage.WM_SETTINGCHANGE,
+            IntPtr.Zero,
+            lParam,
+            User32.SendMessageTimeoutFlags.SMTO_ABORTIFHUNG,
             5000,
             out result);
+        
+        Marshal.FreeHGlobal(lParam);
 
         return result;
     }
